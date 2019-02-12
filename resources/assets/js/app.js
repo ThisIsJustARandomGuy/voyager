@@ -207,6 +207,10 @@ $(document).ready(function () {
                         inputElementPosition = $inputElement.first().parent().offset().top,
                         navbarHeight = $('nav.navbar').height();
 
+                    if(window.onBreadError) {
+                        window.onBreadError(d.errors);
+                    }
+
                     // Scroll to first error
                     if (Object.keys(d.errors).indexOf(inputName) === 0) {
                         $('html, body').animate({
