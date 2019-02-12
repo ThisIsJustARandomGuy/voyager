@@ -194,10 +194,11 @@
             var _this  = this,
                 inpUsr = inp.data('inpUsr'),
                 $_val  = $(inpUsr).val(),
-                $_data = {};  // Create new data
+                $_data = {},
+                mid = inpUsr.data('mce-id')?inpUsr.data('mce-id'):'richtext'+inpUsr.prop('name');  // Create new data
 
             if (inpUsr.hasClass('richTextBox')) {
-                var $_mce = tinymce.get('richtext'+inpUsr.prop('name'));
+                var $_mce = tinymce.get(mid);
                 $_val = $_mce.getContent();
             }
 
@@ -215,13 +216,14 @@
          */
         loadLang: function(inp, lang) {
             var inpUsr = inp.data("inpUsr"),
-                _val   = inp.data(lang);
+                _val   = inp.data(lang),
+                mid = inpUsr.data('mce-id')?inpUsr.data('mce-id'):'richtext'+inpUsr.prop('name');
 
             if (!this.settings.editing) {
                 inpUsr.text(_val);
 
             } else {
-                var _mce = tinymce.get('richtext'+inpUsr.prop('name'));
+                var _mce = tinymce.get(mid);
                 if (inpUsr.hasClass('richTextBox') && _mce && _mce.initialized) {
                     _mce.setContent(_val);
                 } else {
