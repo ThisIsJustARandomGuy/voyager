@@ -173,7 +173,10 @@ $(document).ready(function () {
                     continue;
                 }
             }
-            data.append(this.elements[i].name, this.elements[i].value)
+            // Add checkboxes only if they are checked
+            if (e.currentTarget.elements[i].type != 'checkbox' || e.currentTarget.elements[i].checked) {
+                data.append(this.elements[i].name, this.elements[i].value);
+            }
         }
 
         data.set('_validate', '1');
@@ -195,9 +198,12 @@ $(document).ready(function () {
             success: function (d) {
                 $("body").css("cursor", "auto");
                 $.each(d.errors, function (inputName, errorMessage) {
-
+                    let parsedInputName = inputName;
+                    if(inputName.indexOf('.') > -1) {
+                        parsedInputName = inputName.replace('.', '[').split('.').join('][') + ']';
+                    }
                     // This will work also for fields with brackets in the name, ie. name="image[]
-                    var $inputElement = $("[name='" + inputName + "']"),
+                    var $inputElement = $("[name='" + parsedInputName + "']"),
                         inputElementPosition = $inputElement.first().parent().offset().top,
                         navbarHeight = $('nav.navbar').height();
 
