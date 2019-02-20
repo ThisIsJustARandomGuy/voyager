@@ -197,33 +197,34 @@ $(document).ready(function () {
 
             success: function (d) {
                 $("body").css("cursor", "auto");
-                $.each(d.errors, function (inputName, errorMessage) {
-                    let parsedInputName = inputName;
-                    if(inputName.indexOf('.') > -1) {
-                        parsedInputName = inputName.replace('.', '[').split('.').join('][') + ']';
-                    }
-                    // This will work also for fields with brackets in the name, ie. name="image[]
-                    var $inputElement = $("[name='" + parsedInputName + "']"),
-                        inputElementPosition = $inputElement.first().parent().offset().top,
-                        navbarHeight = $('nav.navbar').height();
+                if(window.onBreadError) {
+                    window.onBreadError(d.errors);
+                } else {
+                    $.each(d.errors, function (inputName, errorMessage) {
+                        let parsedInputName = inputName;
+                        if(inputName.indexOf('.') > -1) {
+                            parsedInputName = inputName.replace('.', '[').split('.').join('][') + ']';
+                        }
+                        // This will work also for fields with brackets in the name, ie. name="image[]
+                        var $inputElement = $("[name='" + parsedInputName + "']"),
+                            inputElementPosition = $inputElement.first().parent().offset().top,
+                            navbarHeight = $('nav.navbar').height();
 
-                    if(window.onBreadError) {
-                        window.onBreadError(d.errors);
-                    }
 
-                    // Scroll to first error
-                    if (Object.keys(d.errors).indexOf(inputName) === 0) {
-                        $('html, body').animate({
-                            scrollTop: inputElementPosition - navbarHeight + 'px'
-                        }, 'fast');
-                    }
+                        // Scroll to first error
+                        if (Object.keys(d.errors).indexOf(inputName) === 0) {
+                            $('html, body').animate({
+                                scrollTop: inputElementPosition - navbarHeight + 'px'
+                            }, 'fast');
+                        }
 
-                    // Hightlight and show the error message
-                    $inputElement.parent()
-                        .addClass("has-error")
-                        .append("<span class='help-block' style='color:#f96868'>" + errorMessage + "</span>")
+                        // Hightlight and show the error message
+                        $inputElement.parent()
+                            .addClass("has-error")
+                            .append("<span class='help-block' style='color:#f96868'>" + errorMessage + "</span>")
 
-                });
+                    });
+                }
             },
 
             error: function () {
