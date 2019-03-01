@@ -20,6 +20,7 @@ require('bootstrap-datetimepicker/src/js/bootstrap-datetimepicker');
 var brace = require('brace');
 require('brace/mode/json');
 require('brace/theme/github');
+require('brace/ext/language_tools');
 require('./slugify');
 window.TinyMCE = window.tinymce = require('./tinymce');
 require('./multilingual');
