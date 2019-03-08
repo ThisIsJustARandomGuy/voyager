@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'is_rtl'                 => 'false',
     'action'                 => 'Akce',
     'actions'                => 'Akce',
     'add'                    => 'Přidat',
@@ -54,6 +55,7 @@ return [
     'no'                     => 'Ne',
     'no_thanks'              => 'Ne, děkuji',
     'not_null'               => 'Nenulový',
+    'no_results'             => 'No results',
     'options'                => 'Možnosti',
     'password'               => 'Heslo',
     'permissions'            => 'Oprávnění',
