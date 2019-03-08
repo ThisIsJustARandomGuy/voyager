@@ -20,6 +20,7 @@ require('bootstrap-datetimepicker/src/js/bootstrap-datetimepicker');
 var brace = require('brace');
 require('brace/mode/json');
 require('brace/theme/github');
+require('brace/ext/language_tools');
 require('./slugify');
 window.TinyMCE = window.tinymce = require('./tinymce');
 require('./multilingual');
@@ -173,7 +174,10 @@ $(document).ready(function () {
                     continue;
                 }
             }
-            data.append(this.elements[i].name, this.elements[i].value)
+            // Add checkboxes only if they are checked
+            if (e.currentTarget.elements[i].type != 'checkbox' || e.currentTarget.elements[i].checked) {
+                data.append(this.elements[i].name, this.elements[i].value);
+            }
         }
 
         data.set('_validate', '1');
@@ -194,26 +198,34 @@ $(document).ready(function () {
 
             success: function (d) {
                 $("body").css("cursor", "auto");
-                $.each(d.errors, function (inputName, errorMessage) {
+                if(window.onBreadError) {
+                    window.onBreadError(d.errors);
+                } else {
+                    $.each(d.errors, function (inputName, errorMessage) {
+                        let parsedInputName = inputName;
+                        if(inputName.indexOf('.') > -1) {
+                            parsedInputName = inputName.replace('.', '[').split('.').join('][') + ']';
+                        }
+                        // This will work also for fields with brackets in the name, ie. name="image[]
+                        var $inputElement = $("[name='" + parsedInputName + "']"),
+                            inputElementPosition = $inputElement.first().parent().offset().top,
+                            navbarHeight = $('nav.navbar').height();
 
-                    // This will work also for fields with brackets in the name, ie. name="image[]
-                    var $inputElement = $("[name='" + inputName + "']"),
-                        inputElementPosition = $inputElement.first().parent().offset().top,
-                        navbarHeight = $('nav.navbar').height();
 
-                    // Scroll to first error
-                    if (Object.keys(d.errors).indexOf(inputName) === 0) {
-                        $('html, body').animate({
-                            scrollTop: inputElementPosition - navbarHeight + 'px'
-                        }, 'fast');
-                    }
+                        // Scroll to first error
+                        if (Object.keys(d.errors).indexOf(inputName) === 0) {
+                            $('html, body').animate({
+                                scrollTop: inputElementPosition - navbarHeight + 'px'
+                            }, 'fast');
+                        }
 
-                    // Hightlight and show the error message
-                    $inputElement.parent()
-                        .addClass("has-error")
-                        .append("<span class='help-block' style='color:#f96868'>" + errorMessage + "</span>")
+                        // Hightlight and show the error message
+                        $inputElement.parent()
+                            .addClass("has-error")
+                            .append("<span class='help-block' style='color:#f96868'>" + errorMessage + "</span>")
 
-                });
+                    });
+                }
             },
 
             error: function () {

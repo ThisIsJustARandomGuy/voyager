@@ -17,6 +17,12 @@ for(var i = 0; i < ace_editor_element.length; i++)
     if(ace_editor_element[i].getAttribute('data-language')){
     	ace_editor.getSession().setMode("ace/mode/" + ace_editor_element[i].getAttribute('data-language'));
     }
+
+    if(ace_editor_element[i].getAttribute('data-autocomplete')){
+    	ace_editor.getSession().setMode("ace/mode/" + ace_editor_element[i].getAttribute('data-language'));
+		ace_editor.setOptions({enableBasicAutocompletion: true});
+		ace_editor.setOptions({enableLiveAutocompletion: true});
+	}
     
     ace_editor.on('change', function(event, el) {
     	ace_editor_id = el.container.id;
