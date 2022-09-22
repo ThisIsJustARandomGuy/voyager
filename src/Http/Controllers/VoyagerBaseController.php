@@ -2,6 +2,7 @@
 
 namespace TCG\Voyager\Http\Controllers;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -469,8 +470,8 @@ class VoyagerBaseController extends Controller
     /**
      * Remove translations, images and files related to a BREAD item.
      *
-     * @param \Illuminate\Database\Eloquent\Model $dataType
-     * @param \Illuminate\Database\Eloquent\Model $data
+     * @param Model $dataType
+     * @param Model $data
      *
      * @return void
      */
@@ -514,8 +515,8 @@ class VoyagerBaseController extends Controller
     /**
      * Delete all images related to a BREAD item.
      *
-     * @param \Illuminate\Database\Eloquent\Model $data
-     * @param \Illuminate\Database\Eloquent\Model $rows
+     * @param Model $data
+     * @param Model $rows
      *
      * @return void
      */
