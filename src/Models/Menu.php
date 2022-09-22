@@ -17,6 +17,19 @@ class Menu extends Model
 
     protected $guarded = [];
 
+    public static function boot()
+    {
+        parent::boot();
+
+        static::saved(function ($model) {
+            $model->removeMenuFromCache();
+        });
+
+        static::deleted(function ($model) {
+            $model->removeMenuFromCache();
+        });
+    }
+
     public function items()
     {
         return $this->hasMany(Voyager::modelClass('MenuItem'));
@@ -87,12 +100,9 @@ class Menu extends Model
         );
     }
 
-    public function save(array $options = [])
+    public function removeMenuFromCache()
     {
-        //Remove from cache
         \Cache::forget('voyager_menu_'.$this->name);
-
-        parent::save();
     }
 
     private static function processItems($items)
