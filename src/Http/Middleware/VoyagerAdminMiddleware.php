@@ -18,8 +18,10 @@ class VoyagerAdminMiddleware
      */
     public function handle($request, Closure $next)
     {
-        if (!app('VoyagerAuth')->guest()) {
-            $user = app('VoyagerAuth')->user();
+        auth()->setDefaultDriver(app('VoyagerGuard'));
+
+        if (!Auth::guest()) {
+            $user = Auth::user();
             app()->setLocale($user->locale ?? app()->getLocale());
 
             return $user->hasPermission('browse_admin') ? $next($request) : redirect('/');

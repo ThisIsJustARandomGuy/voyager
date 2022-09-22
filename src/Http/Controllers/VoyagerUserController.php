@@ -10,16 +10,27 @@ class VoyagerUserController extends VoyagerBaseController
 {
     public function profile(Request $request)
     {
-        return Voyager::view('voyager::profile');
+        $route = '';
+        $dataType = Voyager::model('DataType')->where('model_name', Auth::guard(app('VoyagerGuard'))->getProvider()->getModel())->first();
+        if (!$dataType && app('VoyagerGuard') == 'web') {
+            $route = route('voyager.users.edit', Auth::user()->getKey());
+        } elseif ($dataType) {
+            $route = route('voyager.'.$dataType->slug.'.edit', Auth::user()->getKey());
+        }
+
+        return Voyager::view('voyager::profile', [
+            'route' => $route,
+        ]);
     }
 
     // POST BR(E)AD
     public function update(Request $request, $id)
     {
-        if (app('VoyagerAuth')->user()->getKey() == $id) {
+        if (Auth::user()->getKey() == $id) {
             $request->merge([
-                'role_id'                              => app('VoyagerAuth')->user()->role_id,
-                'user_belongstomany_role_relationship' => app('VoyagerAuth')->user()->roles->pluck('id')->toArray(),
+                'role_id'                              => Auth::user()->role_id,
+                'user_belongsto_role_relationship'     => Auth::user()->role_id,
+                'user_belongstomany_role_relationship' => Auth::user()->roles->pluck('id')->toArray(),
             ]);
         }
 
