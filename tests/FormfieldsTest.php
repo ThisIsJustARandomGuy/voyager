@@ -372,7 +372,7 @@ class FormfieldsTest extends TestCase
         });
 
         // Delete old BREAD
-        $this->delete(route('voyager.bread.delete', ['id' => DataType::where('name', 'categories')->first()->id]));
+        $this->delete(route('voyager.bread.delete', DataType::where('name', 'categories')->first()->id));
 
         // Create BREAD
         $this->visitRoute('voyager.bread.create', ['table' => 'categories'])
