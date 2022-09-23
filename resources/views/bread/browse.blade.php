@@ -48,12 +48,12 @@
                                 <div id="search-input">
                                     <select id="search_key" name="key">
                                         @foreach($searchable as $key)
-                                            <option value="{{ $key }}" @if($search->key == $key || $key == $defaultSearchKey){{ 'selected' }}@endif>{{ ucwords(str_replace('_', ' ', $key)) }}</option>
+                                            <option value="{{ $key }}" @if($search->key == $key || $key == $defaultSearchKey) selected @endif>{{ ucwords(str_replace('_', ' ', $key)) }}</option>
                                         @endforeach
                                     </select>
                                     <select id="filter" name="filter">
-                                        <option value="contains" @if($search->filter == "contains"){{ 'selected' }}@endif>contains</option>
-                                        <option value="equals" @if($search->filter == "equals"){{ 'selected' }}@endif>=</option>
+                                        <option value="contains" @if($search->filter == "contains") selected @endif>contains</option>
+                                        <option value="equals" @if($search->filter == "equals") selected @endif>=</option>
                                     </select>
                                     <div class="input-group col-md-12">
                                         <input type="text" class="form-control" placeholder="{{ __('voyager::generic.search') }}" name="s" value="{{ $search->value }}">
@@ -183,8 +183,8 @@
                                                     @include('voyager::multilingual.input-hidden-bread-browse')
                                                     @if(json_decode($data->{$row->field}) !== null)
                                                         @foreach(json_decode($data->{$row->field}) as $file)
-                                                            <a href="{{ Storage::disk(config('voyager.storage.disk'))->url($file->download_link) ?: '' }}" target="_blank">
-                                                                {{ $file->original_name ?: '' }}
+                                                            <a href="{{ Storage::disk(config('voyager.storage.disk'))->url($file->download_link) ?: ' " target="_blank">
+                                                                {{ $file->original_name ?: ' 
                                                             </a>
                                                             <br/>
                                                         @endforeach
