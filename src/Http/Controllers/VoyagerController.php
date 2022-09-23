@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Constraint;
 use Intervention\Image\Facades\Image;
+use League\Flysystem\Util;
 use TCG\Voyager\Facades\Voyager;
 
 class VoyagerController extends Controller
@@ -73,10 +74,14 @@ class VoyagerController extends Controller
         return "<script> parent.helpers.setImageValue('".Voyager::image($fullFilename)."'); </script>";
     }
 
-    public function assets($path)
+    public function assets(Request $request)
     {
-        $path = Str::start(str_replace(['../', './'], '', $path), '/');
-        $path = __DIR__.'/../../../publishable/assets'.$path;
+        try {
+            $path = dirname(__DIR__, 3).'/publishable/assets/'.Util::normalizeRelativePath(urldecode($request->path));
+        } catch (\LogicException $e) {
+            abort(404);
+        }
+
         if (File::exists($path)) {
             $mime = '';
             if (Str::endsWith($path, '.js')) {
