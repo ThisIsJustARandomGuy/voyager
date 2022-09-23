@@ -101,7 +101,7 @@ The first thing you should do is publish the assets that come with Voyager. You 
 
 ```bash
 php artisan vendor:publish --provider=VoyagerServiceProvider
-php artisan vendor:publish --provider=ImageServiceProviderLaravel5
+php artisan vendor:publish --provider=ImageServiceProviderLaravelRecent
 ```
 
 Next, call `php artisan migrate` to migrate all Voyager table.
