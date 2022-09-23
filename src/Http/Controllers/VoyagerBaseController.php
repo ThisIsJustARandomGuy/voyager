@@ -48,19 +48,13 @@ class VoyagerBaseController extends Controller
         $search = (object) ['value' => $request->get('s'), 'key' => $request->get('key'), 'filter' => $request->get('filter')];
         $searchable = $dataType->server_side ? SchemaManager::describeTable(app($dataType->model_name)->getTable())->pluck('name')->toArray() : '';
         $orderBy = $request->get('order_by', $dataType->order_column);
-        $sortOrder = $request->get('sort_order', null);
+        $sortOrder = $request->get('sort_order', $dataType->order_direction);
         $usesSoftDeletes = false;
         $showSoftDeleted = false;
         $orderColumn = [];
         if ($orderBy) {
             $index = $dataType->browseRows->where('field', $orderBy)->keys()->first() + 1;
-            $orderColumn = [[$index, 'desc']];
-            if (!$sortOrder && isset($dataType->order_direction)) {
-                $sortOrder = $dataType->order_direction;
-                $orderColumn = [[$index, $dataType->order_direction]];
-            } else {
-                $orderColumn = [[$index, 'desc']];
-            }
+            $orderColumn = [[$index, $sortOrder ?? 'desc']];
         }
 
         // Next Get or Paginate the actual content from the MODEL that corresponds to the slug DataType
