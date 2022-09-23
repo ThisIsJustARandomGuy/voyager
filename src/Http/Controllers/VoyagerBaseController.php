@@ -644,7 +644,17 @@ class VoyagerBaseController extends Controller
         $search = $request->input('search', false);
         $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
-        foreach ($dataType->editRows as $key => $row) {
+        $method = $request->input('method', 'add');
+
+        $model = app($dataType->model_name);
+        if ($method != 'add') {
+            $model = $model->find($request->input('id'));
+        }
+
+        $this->authorize($method, $model);
+
+        $rows = $dataType->{$method.'Rows'};
+        foreach ($rows as $key => $row) {
             if ($row->field === $request->input('type')) {
                 $options = $row->details;
                 $skip = $on_page * ($page - 1);
