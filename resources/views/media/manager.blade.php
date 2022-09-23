@@ -525,7 +525,7 @@
                 } else {
                     var path = this.getCurrentPath();
                     path.length = i + 1;
-                    this.current_folder = this.basePath+path.join('/');
+                    this.current_folder = this.basePath+path.join('/') + '/';
                 }
 
                 this.getFiles();
