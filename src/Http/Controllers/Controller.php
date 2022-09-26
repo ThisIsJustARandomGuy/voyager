@@ -8,6 +8,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use TCG\Voyager\Events\FileDeleted;
 use TCG\Voyager\Http\Controllers\ContentTypes\Checkbox;
 use TCG\Voyager\Http\Controllers\ContentTypes\Coordinates;
@@ -21,7 +22,6 @@ use TCG\Voyager\Http\Controllers\ContentTypes\SelectMultiple;
 use TCG\Voyager\Http\Controllers\ContentTypes\Text;
 use TCG\Voyager\Http\Controllers\ContentTypes\Timestamp;
 use TCG\Voyager\Traits\AlertsMessages;
-use Validator;
 
 abstract class Controller extends BaseController
 {
@@ -253,7 +253,7 @@ abstract class Controller extends BaseController
 
     public function deleteFileIfExists($path)
     {
-        if (Storage::disk(config('voyager.storage.disk'))->exists($path)) {
+        if ($path && Storage::disk(config('voyager.storage.disk'))->exists($path)) {
             Storage::disk(config('voyager.storage.disk'))->delete($path);
             event(new FileDeleted($path));
         }

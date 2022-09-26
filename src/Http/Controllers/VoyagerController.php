@@ -34,7 +34,7 @@ class VoyagerController extends Controller
         $slug = $request->input('type_slug');
         $file = $request->file('image');
 
-        $path = $slug.'/'.date('F').date('Y').'/';
+        $path = $slug.'/'.date('FY').'/';
 
         $filename = basename($file->getClientOriginalName(), '.'.$file->getClientOriginalExtension());
         $filename_counter = 1;

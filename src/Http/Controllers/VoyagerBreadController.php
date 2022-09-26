@@ -25,7 +25,7 @@ class VoyagerBreadController extends Controller
         $dataTypes = Voyager::model('DataType')->select('id', 'name', 'slug')->get()->keyBy('name')->toArray();
 
         $tables = array_map(function ($table) use ($dataTypes) {
-            $table = Str::replace(DB::getTablePrefix(), '', $table);
+            $table = Str::replaceFirst(DB::getTablePrefix(), '', $table);
 
             $table = [
                 'prefix'     => DB::getTablePrefix(),
@@ -55,7 +55,8 @@ class VoyagerBreadController extends Controller
         $dataType = Voyager::model('DataType')->whereName($table)->first();
 
         $data = $this->prepopulateBreadInfo($table);
-        $data['fieldOptions'] = SchemaManager::describeTable((isset($dataType) && strlen($dataType->model_name) != 0)
+        $data['fieldOptions'] = SchemaManager::describeTable(
+            (isset($dataType) && strlen($dataType->model_name) != 0)
             ? DB::getTablePrefix() . app($dataType->model_name)->getTable()
             : DB::getTablePrefix() . $table
         );
@@ -123,7 +124,8 @@ class VoyagerBreadController extends Controller
 
         $dataType = Voyager::model('DataType')->whereName($table)->first();
 
-        $fieldOptions = SchemaManager::describeTable((strlen($dataType->model_name) != 0)
+        $fieldOptions = SchemaManager::describeTable(
+            (strlen($dataType->model_name) != 0)
             ? DB::getTablePrefix() . app($dataType->model_name)->getTable()
             : DB::getTablePrefix() . $dataType->name
         );
@@ -350,8 +352,8 @@ class VoyagerBreadController extends Controller
         Voyager::model('DataRow')->destroy($id);
 
         return back()->with([
-                'message'    => 'Successfully deleted relationship.',
-                'alert-type' => 'success',
-            ]);
+            'message'    => 'Successfully deleted relationship.',
+            'alert-type' => 'success',
+        ]);
     }
 }
