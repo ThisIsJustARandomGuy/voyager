@@ -21,10 +21,10 @@
                         $url .= '/'.$segment;
                         @endphp
                         @if ($loop->last)
-                            <li>{{ ucfirst($segment) }}</li>
+                            <li>{{ ucfirst(urldecode($segment)) }}</li>
                         @else
                             <li>
-                                <a href="{{ $url }}">{{ ucfirst($segment) }}</a>
+                                <a href="{{ $url }}">{{ ucfirst(urldecode($segment)) }}</a>
                             </li>
                         @endif
                     @endforeach
@@ -32,7 +32,7 @@
             </ol>
             @show
         </div>
-        <ul class="nav navbar-nav @if (config('voyager.multilingual.rtl')) navbar-left @else navbar-right @endif">
+        <ul class="nav navbar-nav @if (__('voyager::generic.is_rtl') == 'true') navbar-left @else navbar-right @endif">
             <li class="dropdown profile">
                 <a href="#" class="dropdown-toggle text-right" data-toggle="dropdown" role="button"
                    aria-expanded="false"><img src="{{ $user_avatar }}" class="profile-img"> <span

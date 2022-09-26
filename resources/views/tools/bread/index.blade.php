@@ -28,8 +28,8 @@
                     <tr>
                         <td>
                             <p class="name">
-                                <a href="{{ route('voyager.database.show', $table->prefix . $table->name) }}"
-                                   data-name="{{ $table->prefix . $table->name }}" class="desctable">
+                                <a href="{{ route('voyager.database.show', $table->prefix.$table->name) }}"
+                                   data-name="{{ $table->prefix.$table->name }}" class="desctable">
                                    {{ $table->name }}
                                 </a>
                                 <i class="voyager-data"
@@ -74,7 +74,7 @@
                     <h4 class="modal-title"><i class="voyager-trash"></i>  {!! __('voyager::bread.delete_bread_quest', ['table' => '<span id="delete_builder_name"></span>']) !!}</h4>
                 </div>
                 <div class="modal-footer">
-                    <form action="" id="delete_builder_form" method="POST">
+                    <form action="#" id="delete_builder_form" method="POST">
                         {{ method_field('DELETE') }}
                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
                         <input type="submit" class="btn btn-danger" value="{{ __('voyager::bread.delete_bread_conf') }}">

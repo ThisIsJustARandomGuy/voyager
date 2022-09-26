@@ -6,6 +6,7 @@
 @extends('voyager::master')
 
 @section('css')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         .panel .mce-panel {
             border-left-color: #fff;
@@ -217,7 +218,7 @@
                             <div class="form-group">
                                 <label for="category_id">{{ __('voyager::post.category') }}</label>
                                 <select class="form-control" name="category_id">
-                                    @foreach(TCG\Voyager\Models\Category::all() as $category)
+                                    @foreach(Voyager::model('Category')::all() as $category)
                                         <option value="{{ $category->id }}"@if(isset($dataTypeContent->category_id) && $dataTypeContent->category_id == $category->id) selected="selected"@endif>{{ $category->name }}</option>
                                     @endforeach
                                 </select>
@@ -293,9 +294,9 @@
 
         <iframe id="form_target" name="form_target" style="display:none"></iframe>
         <form id="my_form" action="{{ route('voyager.upload') }}" target="form_target" method="post"
-              enctype="multipart/form-data" style="width:0px;height:0;overflow:hidden">
+                enctype="multipart/form-data" style="width:0;height:0;overflow:hidden">
             <input name="image" id="upload_file" type="file"
-                   onchange="$('#my_form').submit();this.value='';">
+                     onchange="$('#my_form').submit();this.value='';">
             <input type="hidden" name="type_slug" id="type_slug" value="{{ $dataType->slug }}">
             {{ csrf_field() }}
         </form>
@@ -331,21 +332,21 @@
         var $file;
 
         function deleteHandler(tag, isMulti) {
-            return function() {
-                $file = $(this).siblings(tag);
+          return function() {
+            $file = $(this).siblings(tag);
 
-                params = {
-                    slug:   '{{ $dataType->slug }}',
-                    filename:  $file.data('file-name'),
-                    id:     $file.data('id'),
-                    field:  $file.parent().data('field-name'),
-                    multi: isMulti,
-                    _token: '{{ csrf_token() }}'
-                }
+            params = {
+                slug:   '{{ $dataType->slug }}',
+                filename:  $file.data('file-name'),
+                id:     $file.data('id'),
+                field:  $file.parent().data('field-name'),
+                multi: isMulti,
+                _token: '{{ csrf_token() }}'
+            }
 
-                $('.confirm_delete_name').text(params.filename);
-                $('#confirm_delete_modal').modal('show');
-            };
+            $('.confirm_delete_name').text(params.filename);
+            $('#confirm_delete_modal').modal('show');
+          };
         }
 
         $('document').ready(function () {
@@ -363,7 +364,7 @@
             });
 
             @if ($isModelTranslatable)
-            $('.side-body').multilingual({"editing": true});
+                $('.side-body').multilingual({"editing": true});
             @endif
 
             $('.side-body input[data-slug-origin]').each(function(i, el) {
@@ -376,18 +377,18 @@
             $('.form-group').on('click', '.remove-single-file', deleteHandler('a', false));
 
             $('#confirm_delete').on('click', function(){
-               $.post('{{ route('voyager.media.remove') }}', params, function (response) {
-                   if ( response
-                       && response.data
-                       && response.data.status
-                       && response.data.status == 200 ) {
+                $.post('{{ route('voyager.'.$dataType->slug.'.media.remove') }}', params, function (response) {
+                    if ( response
+                        && response.data
+                        && response.data.status
+                        && response.data.status == 200 ) {
 
                         toastr.success(response.data.message);
                         $file.parent().fadeOut(300, function() { $(this).remove(); })
-                   } else {
-                       toastr.error("Error removing file.");
-                   }
-               });
+                    } else {
+                        toastr.error("Error removing file.");
+                    }
+                });
 
                 $('#confirm_delete_modal').modal('hide');
             });

@@ -287,12 +287,12 @@
                                         @elseif($setting->type == "file" && isset( $setting->value ))
                                             @if(json_decode($setting->value) !== null)
                                                 @foreach(json_decode($setting->value) as $file)
-                                                    <div class="fileType">
-                                                        <a class="fileType" target="_blank" href="{{ Storage::disk(config('voyager.storage.disk'))->url($file->download_link) }}">
-                                                            {{ $file->original_name }}
-                                                        </a>
-                                                        <a href="{{ route('voyager.settings.delete_value', $setting->id) }}" class="voyager-x delete_value"></a>
-                                                    </div>
+                                                  <div class="fileType">
+                                                    <a class="fileType" target="_blank" href="{{ Storage::disk(config('voyager.storage.disk'))->url($file->download_link) }}">
+                                                      {{ $file->original_name }}
+                                                    </a>
+                                                    <a href="{{ route('voyager.settings.delete_value', $setting->id) }}" class="voyager-x delete_value"></a>
+                                                 </div>
                                                 @endforeach
                                             @endif
                                         @endif
@@ -483,6 +483,9 @@
                 $(this).closest('form').attr('action', $(this).attr('href'));
                 $(this).closest('form').submit();
             });
+
+            // Initiliaze rich text editor
+            tinymce.init(window.voyagerTinyMCE.getConfig());
         });
     </script>
     <script type="text/javascript">

@@ -10,7 +10,12 @@
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
 
     <!-- Favicon -->
-    <link rel="shortcut icon" href="{{ voyager_asset('images/logo-icon.png') }}" type="image/x-icon">
+    <?php $admin_favicon = Voyager::setting('admin.icon_image', ''); ?>
+    @if($admin_favicon == '')
+        <link rel="shortcut icon" href="{{ voyager_asset('images/logo-icon.png') }}" type="image/png">
+    @else
+        <link rel="shortcut icon" href="{{ Voyager::image($admin_favicon) }}" type="image/png">
+    @endif
 
 
 
@@ -18,7 +23,7 @@
     <link rel="stylesheet" href="{{ voyager_asset('css/app.css') }}">
 
     @yield('css')
-    @if(config('voyager.multilingual.rtl'))
+    @if(__('voyager::generic.is_rtl') == 'true')
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-rtl/3.4.0/css/bootstrap-rtl.css">
         <link rel="stylesheet" href="{{ voyager_asset('css/rtl.css') }}">
     @endif
@@ -86,7 +91,7 @@ if (\Illuminate\Support\Str::startsWith(Auth::user()->avatar, 'http://') || \Ill
                     appContainer.style.WebkitTransition = appContainer.style.MozTransition = appContainer.style.transition =
                     navbar.style.WebkitTransition = navbar.style.MozTransition = navbar.style.transition = 'none';
 
-                    if (window.localStorage && window.localStorage['voyager.stickySidebar'] == 'true') {
+                    if (window.innerWidth > 768 && window.localStorage && window.localStorage['voyager.stickySidebar'] == 'true') {
                         appContainer.className += ' expanded no-animation';
                         loader.style.left = (sidebar.clientWidth/2)+'px';
                         hamburgerMenu.className += ' is-active no-animation';

@@ -164,15 +164,23 @@
                                 </div>
                                 <div class="col-md-3 form-group">
                                     <label for="generate_permissions">{{ __('voyager::bread.generate_permissions') }}</label><br>
-                                    <?php $checked = (isset($dataType->generate_permissions) && $dataType->generate_permissions == 1) ? true : ((isset($generate_permissions) && $generate_permissions) ? true : false); ?>
-                                    <input type="checkbox" name="generate_permissions" class="toggleswitch" data-on="{{ __('voyager::generic.yes') }}" data-off="{{ __('voyager::generic.no') }}"
-                                           @if($checked) checked @endif>
+                                    <?php $checked = (isset($dataType->generate_permissions) && $dataType->generate_permissions == 1) || (isset($generate_permissions) && $generate_permissions); ?>
+                                    <input type="checkbox"
+                                           name="generate_permissions"
+                                           class="toggleswitch"
+                                           data-on="{{ __('voyager::generic.yes') }}"
+                                           data-off="{{ __('voyager::generic.no') }}"
+                                           @if($checked) checked @endif >
                                 </div>
                                 <div class="col-md-3 form-group">
                                     <label for="server_side">{{ __('voyager::bread.server_pagination') }}</label><br>
-                                    <?php $checked = (isset($dataType->server_side) && $dataType->server_side == 1) ? true : ((isset($server_side) && $server_side) ? true : false); ?>
-                                    <input type="checkbox" name="server_side" class="toggleswitch" data-on="{{ __('voyager::generic.yes') }}" data-off="{{ __('voyager::generic.no') }}"
-                                           @if($checked) checked @endif>
+                                    <?php $checked = (isset($dataType->server_side) && $dataType->server_side == 1) || (isset($server_side) && $server_side); ?>
+                                    <input type="checkbox"
+                                           name="server_side"
+                                           class="toggleswitch"
+                                           data-on="{{ __('voyager::generic.yes') }}"
+                                           data-off="{{ __('voyager::generic.no') }}"
+                                           @if($checked) checked @endif >
                                 </div>
                             </div>
                             <div class="row clearfix">
@@ -184,10 +192,10 @@
                                           data-placement="right"
                                           title="{{ __('voyager::bread.order_column_ph') }}"></span>
                                     <select name="order_column" class="select2 form-control">
-                                          <option value="">-- {{ __('voyager::generic.none') }} --</option>
+                                        <option value="">-- {{ __('voyager::generic.none') }} --</option>
                                         @foreach($fieldOptions as $tbl)
                                         <option value="{{ $tbl['field'] }}"
-                                        @if(isset($dataType) && $dataType->order_column == $tbl['field']) selected @endif
+                                                @if(isset($dataType) && $dataType->order_column == $tbl['field']) selected @endif
                                         >{{ $tbl['field'] }}</option>
                                         @endforeach
                                       </select>
@@ -203,7 +211,7 @@
                                         <option value="">-- {{ __('voyager::generic.none') }} --</option>
                                         @foreach($fieldOptions as $tbl)
                                         <option value="{{ $tbl['field'] }}"
-                                        @if(isset($dataType) && $dataType->order_display_column == $tbl['field']) selected @endif
+                                                @if(isset($dataType) && $dataType->order_display_column == $tbl['field']) selected @endif
                                         >{{ $tbl['field'] }}</option>
                                         @endforeach
                                     </select>
@@ -252,9 +260,10 @@
                                 @endif
                                 <div class="col-md-9 form-group">
                                     <label for="description">{{ __('voyager::bread.description') }}</label>
-                                    <textarea class="form-control" name="description"
+                                    <textarea class="form-control"
+                                              name="description"
                                               placeholder="{{ __('voyager::bread.description') }}"
-                                        >{{ $dataType->description ?? '' }}</textarea>
+                                    >{{ $dataType->description ?? '' }}</textarea>
                                 </div>
                             </div>
                         </div><!-- .panel-body -->
@@ -288,8 +297,7 @@
                                 @endphp
 
                                 @if(isset($dataType->id))
-                                    <?php $dataRow = Voyager::model('DataRow')->where('data_type_id', '=',
-                                            $dataType->id)->where('field', '=', $data['field'])->first(); ?>
+                                    <?php $dataRow = Voyager::model('DataRow')->where('data_type_id', '=', $dataType->id)->where('field', '=', $data['field'])->first(); ?>
                                 @endif
 
                                 <div class="row row-dd">
@@ -348,15 +356,7 @@
                                             <select name="field_input_type_{{ $data['field'] }}">
                                                 @foreach (Voyager::formFields() as $formField)
                                                     @php
-                                                    if (
-                                                        (isset($dataRow->type) && $dataRow->type == $formField->getCodename())
-                                                        ||
-                                                        (!isset($dataRow->type) && $formField->getCodename() == 'text')
-                                                    ) {
-                                                        $selected = true;
-                                                    } else {
-                                                        $selected = false;
-                                                    }
+                                                    $selected = (isset($dataRow->type) && $formField->getCodename() == $dataRow->type) || (!isset($dataRow->type) && $formField->getCodename() == 'text');
                                                     @endphp
                                                     <option value="{{ $formField->getCodename() }}" {{ $selected ? 'selected' : '' }}>
                                                         {{ $formField->getName() }}
@@ -374,12 +374,11 @@
                                         <div class="alert alert-danger validation-error">
                                             {{ __('voyager::json.invalid') }}
                                         </div>
-                                        <textarea id="json-input-{{ json_encode($data['field']) }}" class="resizable-editor" data-editor="json" name="field_details_{{ $data['field'] }}">
-                                            @if(isset($dataRow->details))
-                                                {{ json_encode($dataRow->details) }}
-                                            @else
-                                                {}
-                                            @endif
+                                        <textarea id="json-input-{{ json_encode($data['field']) }}"
+                                                  class="resizable-editor"
+                                                  data-editor="json"
+                                                  name="field_details_{{ $data['field'] }}">
+                                            {{ json_encode(isset($dataRow->details) ? $dataRow->details : new class{}) }}
                                         </textarea>
                                     </div>
                                 </div>

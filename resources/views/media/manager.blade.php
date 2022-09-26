@@ -1,12 +1,12 @@
 @section('media-manager')
 <div>
-    <div v-if="hidden_element" class="dd">
+    <div v-if="hidden_element" :id="'dd_'+this._uid" class="dd">
         <ol id="files" class="dd-list">
             <li v-for="file in getSelectedFiles()" class="dd-item" :data-url="file">
                 <div class="file_link selected" aria-hidden="true" data-toggle="tooltip" data-placement="auto" :title="file">
                     <div class="link_icon">
                         <template v-if="fileIs(file, 'image')">
-                            <div class="img_icon" :style="imgIcon('{{ Storage::disk(config('voyager.storage.disk'))->url('') }}'+file)"></div>
+                            <div class="img_icon" :style="imgIcon('{{ Storage::disk(config('voyager.storage.disk'))->url('/') }}'+file)"></div>
                         </template>
                         <template v-else-if="fileIs(file, 'video')">
                             <i class="icon voyager-video"></i>
@@ -35,12 +35,12 @@
         </ol>
     </div>
     <div v-if="hidden_element">
-        <div class="btn btn-sm btn-default" v-on:click="expanded = !expanded;" style="width:100%">
-            <div v-if="!expanded"><i class="voyager-double-down"></i> {{ __('voyager::generic.open') }}</div>
-            <div v-if="expanded"><i class="voyager-double-up"></i> {{ __('voyager::generic.close') }}</div>
+        <div class="btn btn-sm btn-default" v-on:click="isExpanded = !isExpanded;" style="width:100%">
+            <div v-if="!isExpanded"><i class="voyager-double-down"></i> {{ __('voyager::generic.open') }}</div>
+            <div v-if="isExpanded"><i class="voyager-double-up"></i> {{ __('voyager::generic.close') }}</div>
         </div>
     </div>
-    <div id="toolbar" v-if="showToolbar" :style="expanded ? 'display:block' : 'display:none'">
+    <div id="toolbar" v-if="showToolbar" :style="isExpanded ? 'display:block' : 'display:none'">
         <div class="btn-group offset-right">
             <button type="button" class="btn btn-primary" id="upload" v-if="allowUpload">
                 <i class="voyager-upload"></i>
@@ -55,6 +55,10 @@
             <i class="voyager-refresh"></i>
         </button>
         <div class="btn-group offset-right">
+            <button type="button" :disabled="selected_files.length == 0" v-if="allowUpload && hidden_element" class="btn btn-default" v-on:click="addSelectedFiles()">
+                <i class="voyager-upload"></i>
+                {{ __('voyager::media.add_all_selected') }}
+            </button>
             <button type="button" v-if="showFolders && allowMove" class="btn btn-default" data-toggle="modal" :data-target="'#move_files_modal_'+this._uid">
                 <i class="voyager-move"></i>
                 {{ __('voyager::generic.move') }}

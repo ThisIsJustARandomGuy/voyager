@@ -28,6 +28,7 @@
                     data-get-items-field="{{$row->field}}"
                     @if(!is_null($dataTypeContent->getKey())) data-id="{{$dataTypeContent->getKey()}}" @endif
                     data-method="{{ !is_null($dataTypeContent->getKey()) ? 'edit' : 'add' }}"
+                    @if($row->required == 1) required @endif
                 >
                     @php
                         $model = app($options->model);
@@ -164,6 +165,7 @@
                         data-label="{{$options->label}}"
                         data-error-message="{{__('voyager::bread.error_tagging')}}"
                     @endif
+                    @if($row->required == 1) required @endif
                 >
 
                         @php
