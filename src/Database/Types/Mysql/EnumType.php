@@ -8,11 +8,18 @@ use TCG\Voyager\Database\Types\Type;
 
 class EnumType extends Type
 {
-    const NAME = 'enum';
+    public const NAME = 'enum';
 
     public function getSQLDeclaration(array $field, AbstractPlatform $platform)
     {
-        throw new \Exception('Enum type is not supported');
+        $enumField = collect(DB::select(DB::raw('SHOW COLUMNS FROM '.DB::getQueryGrammar()->wrap($this->tableName))))->where('Field', $field['name'])->first();
+
+        if (!is_null($enumField)) {
+            return $enumField->Type;
+        }
+
+        throw new \Exception('Enum definition error');
+        // throw new \Exception('Enum type is not supported');
         // get allowed from $column instance???
         // learn more about this....
 
