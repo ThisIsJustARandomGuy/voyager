@@ -117,6 +117,17 @@ class VoyagerBaseController extends Controller
         // Check if a default search key is set
         $defaultSearchKey = $dataType->default_search_key ?? null;
 
+        // Actions
+        $actions = [];
+        if (!empty($dataTypeContent->first())) {
+            foreach (Voyager::actions() as $action) {
+                $action = new $action($dataType, $dataTypeContent->first());
+
+                if ($action->shouldActionDisplayOnDataType()) {
+                    $actions[] = $action;
+                }
+            }
+        }
         $view = 'voyager::bread.browse';
 
         if (view()->exists("voyager::$slug.browse")) {
@@ -124,6 +135,7 @@ class VoyagerBaseController extends Controller
         }
 
         return Voyager::view($view, compact(
+            'actions',
             'dataType',
             'dataTypeContent',
             'isModelTranslatable',
@@ -161,15 +173,16 @@ class VoyagerBaseController extends Controller
 
         if (strlen($dataType->model_name) != 0) {
             $model = app($dataType->model_name);
+            $query = $model->query();
 
             // Use withTrashed() if model uses SoftDeletes and if toggle is selected
             if ($model && in_array(SoftDeletes::class, class_uses_recursive($model))) {
-                $model = $model->withTrashed();
+                $query = $query->withTrashed();
             }
             if ($dataType->scope && $dataType->scope != '' && method_exists($model, 'scope'.ucfirst($dataType->scope))) {
-                $model = $model->{$dataType->scope}();
+                $query = $query->{$dataType->scope}();
             }
-            $dataTypeContent = call_user_func([$model, 'findOrFail'], $id);
+            $dataTypeContent = call_user_func([$query, 'findOrFail'], $id);
             if ($dataTypeContent->deleted_at) {
                 $isSoftDeleted = true;
             }
@@ -219,15 +232,16 @@ class VoyagerBaseController extends Controller
 
         if (strlen($dataType->model_name) != 0) {
             $model = app($dataType->model_name);
+            $query = $model->query();
 
             // Use withTrashed() if model uses SoftDeletes and if toggle is selected
             if ($model && in_array(SoftDeletes::class, class_uses_recursive($model))) {
-                $model = $model->withTrashed();
+                $query = $query->withTrashed();
             }
             if ($dataType->scope && $dataType->scope != '' && method_exists($model, 'scope'.ucfirst($dataType->scope))) {
-                $model = $model->{$dataType->scope}();
+                $query = $query->{$dataType->scope}();
             }
-            $dataTypeContent = call_user_func([$model, 'findOrFail'], $id);
+            $dataTypeContent = call_user_func([$query, 'findOrFail'], $id);
         } else {
             // If Model doest exist, get data from table name
             $dataTypeContent = DB::table($dataType->name)->where('id', $id)->first();
@@ -462,6 +476,135 @@ class VoyagerBaseController extends Controller
         return redirect()->route("voyager.{$dataType->slug}.index")->with($data);
     }
 
+    //***************************************
+    //
+    //  Delete uploaded file
+    //
+    //****************************************
+
+    public function remove_media(Request $request)
+    {
+        try {
+            // GET THE SLUG, ex. 'posts', 'pages', etc.
+            $slug = $request->get('slug');
+
+            // GET file name
+            $filename = $request->get('filename');
+
+            // GET record id
+            $id = $request->get('id');
+
+            // GET field name
+            $field = $request->get('field');
+
+            // GET multi value
+            $multi = $request->get('multi');
+
+            $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
+
+            // Load model and find record
+            $model = app($dataType->model_name);
+            $data = $model::find([$id])->first();
+
+            // Check if field exists
+            if (!isset($data->{$field})) {
+                throw new Exception(__('voyager::generic.field_does_not_exist'), 400);
+            }
+
+            // Check permission
+            $this->authorize('edit', $data);
+
+            if (@json_decode($multi)) {
+                // Check if valid json
+                if (is_null(@json_decode($data->{$field}))) {
+                    throw new Exception(__('voyager::json.invalid'), 500);
+                }
+
+                // Decode field value
+                $fieldData = @json_decode($data->{$field}, true);
+                $key = null;
+
+                // Check if we're dealing with a nested array for the case of multiple files
+                if (is_array($fieldData[0])) {
+                    foreach ($fieldData as $index=>$file) {
+                        // file type has a different structure than images
+                        if (!empty($file['original_name'])) {
+                            if ($file['original_name'] == $filename) {
+                                $key = $index;
+                                break;
+                            }
+                        } else {
+                            $file = array_flip($file);
+                            if (array_key_exists($filename, $file)) {
+                                $key = $index;
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    $key = array_search($filename, $fieldData);
+                }
+
+                // Check if file was found in array
+                if (is_null($key) || $key === false) {
+                    throw new Exception(__('voyager::media.file_does_not_exist'), 400);
+                }
+
+                $fileToRemove = $fieldData[$key]['download_link'] ?? $fieldData[$key];
+
+                // Remove file from array
+                unset($fieldData[$key]);
+
+                // Generate json and update field
+                $data->{$field} = empty($fieldData) ? null : json_encode(array_values($fieldData));
+            } else {
+                if ($filename == $data->{$field}) {
+                    $fileToRemove = $data->{$field};
+
+                    $data->{$field} = null;
+                } else {
+                    throw new Exception(__('voyager::media.file_does_not_exist'), 400);
+                }
+            }
+
+            $row = $dataType->rows->where('field', $field)->first();
+
+            // Remove file from filesystem
+            if (in_array($row->type, ['image', 'multiple_images'])) {
+                $this->deleteBreadImages($data, [$row], $fileToRemove);
+            } else {
+                $this->deleteFileIfExists($fileToRemove);
+            }
+
+            $data->save();
+
+            return response()->json([
+                'data' => [
+                    'status'  => 200,
+                    'message' => __('voyager::media.file_removed'),
+                ],
+            ]);
+        } catch (Exception $e) {
+            $code = 500;
+            $message = __('voyager::generic.internal_error');
+
+            if ($e->getCode()) {
+                $code = $e->getCode();
+            }
+
+            if ($e->getMessage()) {
+                $message = $e->getMessage();
+            }
+
+            return response()->json([
+                'data' => [
+                    'status'  => $code,
+                    'message' => $message,
+                ],
+            ], $code);
+        }
+    }
+
     /**
      * Remove translations, images and files related to a BREAD item.
      *
@@ -567,10 +710,11 @@ class VoyagerBaseController extends Controller
         }
 
         $model = app($dataType->model_name);
+        $query = $model->query();
         if ($model && in_array(SoftDeletes::class, class_uses_recursive($model))) {
-            $model = $model->withTrashed();
+            $query = $query->withTrashed();
         }
-        $results = $model->orderBy($dataType->order_column, $dataType->order_direction)->get();
+        $results = $query->orderBy($dataType->order_column, $dataType->order_direction)->get();
 
         $display_column = $dataType->order_display_column;
 
@@ -616,10 +760,15 @@ class VoyagerBaseController extends Controller
 
     public function action(Request $request)
     {
+        if (!$request->action || !class_exists($request->action)) {
+            throw new \Exception("Action {$request->action} doesn't exist or has not been defined");
+        }
+
         $slug = $this->getSlug($request);
         $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         $action = new $request->action($dataType, null);
+
         return $action->massAction(explode(',', $request->ids), $request->headers->get('referer'));
     }
 
