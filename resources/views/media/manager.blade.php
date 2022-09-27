@@ -77,7 +77,7 @@
     <div id="uploadProgress" class="progress active progress-striped" v-if="allowUpload">
         <div class="progress-bar progress-bar-success" style="width: 0"></div>
     </div>
-    <div id="content" :style="expanded ? 'display:block' : 'display:none'">
+    <div id="content" :style="isExpanded ? 'display:block' : 'display:none'">
         <div class="breadcrumb-container">
             <ol class="breadcrumb filemanager">
                 <li class="media_breadcrumb" v-on:click="setCurrentPath(-1)">
@@ -202,6 +202,17 @@
                                     <p>@{{ dateFilter(selected_file.last_modified) }}</p>
                                 </span>
                             </template>
+
+                            <span v-if="fileIs(selected_file, 'image') && selected_file.thumbnails.length > 0">
+                                <h4>Thumbnails</h4><br>
+                                <ul>
+                                    <li v-for="thumbnail in selected_file.thumbnails">
+                                        <a :href="thumbnail.path" target="_blank">
+                                            @{{ thumbnail.thumb_name }}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </span>
                         </div>
                     </div>
                     <div v-else class="right_none_selected">
@@ -243,7 +254,7 @@
                 </div>
 
                 <div class="modal-body">
-                    <input name="new_folder_name" placeholder="{{ __('voyager::media.new_folder_name') }}" class="form-control" value=""/>
+                    <input name="new_folder_name" placeholder="{{ __('voyager::media.new_folder_name') }}" class="form-control" value="" v-model="modals.new_folder.name" />
                 </div>
 
                 <div class="modal-footer">
@@ -297,7 +308,8 @@
 
                 <div class="modal-body">
                     <h4>{{ __('voyager::media.destination_folder') }}</h4>
-                    <select class="form-control">
+                    <select class="form-control" v-model="modals.move_files.destination">
+                        <option value="" disabled>{{ __('voyager::media.destination_folder') }}</option>
                         <option v-if="current_folder != basePath && showFolders" value="/../">../</option>
                         <option v-for="file in files" v-if="file.type == 'folder' && !selected_files.includes(file)" :value="current_folder+'/'+file.name">@{{ file.name }}</option>
                     </select>
@@ -402,7 +414,7 @@
             allowedTypes: {
                 type: Array,
                 default: function() {
-                    return []
+                    return [];
                 }
             },
             preSelect: {
@@ -412,7 +424,17 @@
             element: {
                 type: String,
                 default: ""
-            }
+            },
+            details: {
+                type: Object,
+                default: function() {
+                    return {};
+                }
+            },
+            expanded: {
+                type: Boolean,
+                default: true,
+            },
         },
         data: function() {
             return {
@@ -421,7 +443,15 @@
                 files: [],
 		  		is_loading: true,
                 hidden_element: null,
-                expanded: true,
+                isExpanded: this.expanded,
+                modals: {
+                    new_folder: {
+                        name: ''
+                    },
+                    move_files: {
+                        destination: ''
+                    }
+                }
             };
         },
         computed: {
@@ -433,7 +463,7 @@
             getFiles: function() {
                 var vm = this;
                 vm.is_loading = true;
-                $.post('{{ route('voyager.media.files') }}', { folder: vm.current_folder, _token: '{{ csrf_token() }}' }, function(data) {
+                $.post('{{ route('voyager.media.files') }}', { folder: vm.current_folder, _token: '{{ csrf_token() }}', details: vm.details }, function(data) {
                     vm.files = [];
                     for (var i = 0, file; file = data[i]; i++) {
                         if (vm.filter(file)) {
@@ -448,11 +478,12 @@
 				});
             },
             selectFile: function(file, e) {
-                if ((!e.ctrlKey && !e.shiftKey) || !this.allowMultiSelect) {
+                if ((!e.ctrlKey && !e.metaKey && !e.shiftKey) || !this.allowMultiSelect) {
                     this.selected_files = [];
                 }
 
                 if (e.shiftKey && this.allowMultiSelect && this.selected_files.length == 1) {
+                    var index = null;
                     var start = 0;
                     for (var i = 0, cfile; cfile = this.files[i]; i++) {
                         if (cfile === this.selected_file) {
@@ -470,11 +501,17 @@
                     }
 
                     for (var i = start; i < end; i++) {
-                        this.selected_files.push(this.files[i]);
+                        index = this.selected_files.indexOf(this.files[i]);
+                        if (index === -1) {
+                            this.selected_files.push(this.files[i]);
+                        }
                     }
                 }
 
-                this.selected_files.push(file);
+                index = this.selected_files.indexOf(file);
+                if (index === -1) {
+                    this.selected_files.push(file);
+                }
 
                 if (this.selected_files.length == 1) {
                     var vm = this;
@@ -495,7 +532,7 @@
                     this.addFileToInput(file);
                 } else {
                     if (this.fileIs(this.selected_file, 'image')) {
-                        $('#imagemodal').modal('show');
+                        $('#imagemodal_' + this._uid).modal('show');
                     } else {
                         // ...
                     }
@@ -507,7 +544,7 @@
             fileIs: function(file, type) {
                 if (typeof file === 'string') {
                     if (type == 'image') {
-                        return this.endsWithAny(['jpg', 'jpeg', 'png', 'bmp'], file);
+                        return this.endsWithAny(['jpg', 'jpeg', 'png', 'bmp'], file.toLowerCase());
                     }
                     //Todo: add other types
                 } else {
@@ -578,6 +615,7 @@
                             this.hidden_element.value = JSON.stringify(content);
                         }
                     }
+                    this.$forceUpdate();
                 }
             },
             removeFileFromInput: function(path) {
@@ -628,7 +666,7 @@
                     return;
                 }
                 var vm = this;
-                var name = $(e.path).parent('.modal-content').find('input').first().val();
+                var name = this.modals.new_folder.name;
                 $.post('{{ route('voyager.media.new_folder') }}', { new_folder: vm.current_folder+'/'+name, _token: '{{ csrf_token() }}' }, function(data) {
 					if(data.success == true){
 						toastr.success('{{ __('voyager::generic.successfully_created') }} ' + name, "{{ __('voyager::generic.sweet_success') }}");
@@ -636,7 +674,7 @@
 					} else {
 						toastr.error(data.error, "{{ __('voyager::generic.whoopsie') }}");
 					}
-					$(e.path).parent('.modal-content').find('input').first().val('');
+                    vm.modals.new_folder.name = '';
 					$('#create_dir_modal_'+vm._uid).modal('hide');
 				});
             },
@@ -666,7 +704,10 @@
                     return;
                 }
                 var vm = this;
-                var destination = $(e.path).parent('.modal-content').find('select').first().val();
+                var destination = this.modals.move_files.destination;
+                if (destination === '') {
+                    return;
+                }
                 $('#move_files_modal_'+vm._uid).modal('hide');
 				$.post('{{ route('voyager.media.move') }}', {
                     path: vm.current_folder,
@@ -680,6 +721,8 @@
 					} else {
 						toastr.error(data.error, "{{ __('voyager::generic.whoopsie') }}");
 					}
+
+                    vm.modals.move_files.destination = '';
 				});
             },
             crop: function(mode) {
@@ -697,7 +740,7 @@
 				croppedData.createMode = mode;
 
                 var vm = this;
-				var postData = Object.assign(croppedData, { _token: '{{ csrf_token() }}' })
+                var postData = Object.assign(croppedData, { _token: '{{ csrf_token() }}' });
 				$.post('{{ route('voyager.media.crop') }}', postData, function(data) {
 					if (data.success) {
 						toastr.success(data.message);
@@ -707,6 +750,12 @@
 						toastr.error(data.error, "{{ __('voyager::generic.whoopsie') }}");
 					}
 				});
+            },
+            addSelectedFiles: function () {
+                var vm = this;
+                for (i = 0; i < vm.selected_files.length; i++) {
+                    vm.openFile(vm.selected_files[i]);
+                }
             },
             bytesToSize: function(bytes) {
 				var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -751,7 +800,6 @@
                 if (!this.hidden_element) {
                     console.error('Element "'+this.element+'" could not be found.');
                 } else {
-                    this.expanded = false;
                     if (this.maxSelectedFiles > 1 && this.hidden_element.value == '') {
                         this.hidden_element.value = '[]';
                     }
@@ -814,6 +862,7 @@
                         formData.append("_token", '{{ csrf_token() }}');
                         formData.append("upload_path", vm.current_folder);
                         formData.append("filename", vm.filename);
+                        formData.append("details", JSON.stringify(vm.details));
                     },
                     success: function(e, res) {
                         if (res.success) {
@@ -879,16 +928,15 @@
                 });
 
                 //Nestable
-                $('.dd').nestable({
+                $('#dd_'+vm._uid).nestable({
                     maxDepth: 1,
                     handleClass: 'file_link',
                     collapseBtnHTML: '',
                     expandBtnHTML: '',
-                    emptyClass : '',
                     callback: function(l, e) {
                         if (vm.allowMultiSelect) {
                             var new_content = [];
-                            var object = $('.dd').nestable('serialize');
+                            var object = $('#dd_'+vm._uid).nestable('serialize');
                             for (var key in object) {
                                 new_content.push(object[key].url);
                             }
@@ -896,7 +944,23 @@
                         }
                     }
                 });
+
+                $('#create_dir_modal_' + vm._uid).on('hidden.bs.modal', function () {
+                    vm.modals.new_folder.name = '';
+                });
+
+                $('#move_files_modal_' + vm._uid).on('hidden.bs.modal', function () {
+                    vm.modals.move_files.destination = '';
+                });
             });
         },
     });
 </script>
+<style>
+.dd-placeholder {
+    flex: 1;
+    width: 100%;
+    min-width: 200px;
+    max-width: 250px;
+}
+</style>

@@ -2,6 +2,10 @@
 
 @if (isset($dataType->id))
     @section('page_title', __('voyager::bread.edit_bread_for_table', ['table' => $dataType->name]))
+    @php
+        $display_name = $dataType->display_name_singular;
+        $display_name_plural = $dataType->display_name_plural;
+    @endphp
 @else
     @section('page_title', __('voyager::bread.create_bread_for_table', ['table' => $table]))
 @endif
@@ -37,7 +41,7 @@
     <li class="active">
         @if(isset($dataType->id))
         <a href="{{ route('voyager.bread.edit', $table) }}">
-            {{ $dataType->display_name_singular }}
+            {{ $display_name }}
         </a>
         @else
         <a href="{{ route('voyager.bread.create', $table) }}">
@@ -96,7 +100,7 @@
                                            name="display_name_singular"
                                            id="display_name_singular"
                                            placeholder="{{ __('voyager::bread.display_name_singular') }}"
-                                           value="{{ $dataType->display_name_singular ?? $display_name }}">
+                                           value="{{ $display_name }}">
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <label for="display_name_plural">{{ __('voyager::bread.display_name_plural') }}</label>
@@ -111,7 +115,7 @@
                                            name="display_name_plural"
                                            id="display_name_plural"
                                            placeholder="{{ __('voyager::bread.display_name_plural') }}"
-                                           value="{{ $dataType->display_name_plural ?? $display_name_plural }}">
+                                           value="{{ $display_name_plural }}">
                                 </div>
                             </div>
                             <div class="row clearfix">
@@ -122,7 +126,7 @@
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <label for="icon">{{ __('voyager::bread.icon_hint') }} <a
-                                                href="{{ route('voyager.compass.index', [], false) }}#fonts"
+                                                href="{{ route('voyager.compass.index') }}#fonts"
                                                 target="_blank">{{ __('voyager::bread.icon_hint2') }}</a></label>
                                     <input type="text" class="form-control" name="icon"
                                            placeholder="{{ __('voyager::bread.icon_class') }}"
@@ -238,7 +242,7 @@
                                         <option value="">-- {{ __('voyager::generic.none') }} --</option>
                                         @foreach($fieldOptions as $tbl)
                                         <option value="{{ $tbl['field'] }}"
-                                        @if(isset($dataType) && $dataType->default_search_key == $tbl['field']) selected @endif
+                                                @if(isset($dataType) && $dataType->default_search_key == $tbl['field']) selected @endif
                                         >{{ $tbl['field'] }}</option>
                                         @endforeach
                                     </select>
@@ -252,7 +256,7 @@
                                             <option value="">-- {{ __('voyager::generic.none') }} --</option>
                                             @foreach($scopes as $scope)
                                             <option value="{{ $scope }}"
-                                            @if($dataType->scope == $scope) selected @endif
+                                                    @if($dataType->scope == $scope) selected @endif
                                             >{{ $scope }}</option>
                                             @endforeach
                                         </select>
@@ -308,8 +312,7 @@
                                         <strong>{{ __('voyager::generic.required') }}:</strong>
                                         @if($data['null'] == "NO")
                                             <span>{{ __('voyager::generic.yes') }}</span>
-                                            <input type="hidden" value="1" name="field_required_{{ $data['field'] }}"
-                                                   checked="checked">
+                                            <input type="hidden" value="1" name="field_required_{{ $data['field'] }}" checked="checked">
                                         @else
                                             <span>{{ __('voyager::generic.no') }}</span>
                                             <input type="hidden" value="0" name="field_required_{{ $data['field'] }}">
@@ -366,6 +369,13 @@
                                         @endif
                                     </div>
                                     <div class="col-xs-2">
+                                        @if($isModelTranslatable)
+                                            @include('voyager::multilingual.input-hidden', [
+                                                'isModelTranslatable' => true,
+                                                '_field_name'         => 'field_display_name_' . $data['field'],
+                                                '_field_trans' => $dataRow ? get_field_translations($dataRow, 'display_name') : json_encode([config('voyager.multilingual.default') => ucwords(str_replace('_', ' ', $data['field']))]),
+                                            ])
+                                        @endif
                                         <input type="text" class="form-control"
                                                value="{{ $dataRow->display_name ?? ucwords(str_replace('_', ' ', $data['field'])) }}"
                                                name="field_display_name_{{ $data['field'] }}">
@@ -548,12 +558,14 @@
 
         /********** Relationship functionality **********/
 
-       $(function () {
-            $('.rowDrop').each(function(){
-                populateRowsFromTable($(this));
-            });
-
+        $(function () {
             $('.relationship_type').change(function(){
+                $(this).parent().parent().find('.belongsToManyShow, .belongsToShow, .hasOneShow, .hasManyShow').hide();
+                $(this).parent().parent().find('.' + $(this).val() + 'Show').show();
+                // hasOneShow has a prepopulated select, only one between the following should be enabled
+                $(this).parent().parent().find('.hasOneShow select').attr('disabled', true);
+                $(this).parent().parent().find('.belongsToShow select').attr('disabled', false);
+
                 if($(this).val() == 'belongsTo'){
                     $(this).parent().parent().find('.relationshipField').show();
                     $(this).parent().parent().find('.relationshipPivot').hide();
@@ -568,34 +580,34 @@
                     $(this).parent().parent().find('.relationship_taggable').hide();
                     $(this).parent().parent().find('.hasOneMany').addClass('flexed');
                     $(this).parent().parent().find('.belongsTo').removeClass('flexed');
+                    $(this).parent().parent().find('.hasOneShow select').attr('disabled', false);
+                    $(this).parent().parent().find('.belongsToShow select').attr('disabled', true);
                 } else {
                     $(this).parent().parent().find('.relationshipField').hide();
                     $(this).parent().parent().find('.relationshipPivot').css('display', 'flex');
                     $(this).parent().parent().find('.relationship_key').hide();
                     $(this).parent().parent().find('.relationship_taggable').show();
                 }
-            });
+            }).trigger('change');
 
             $('.btn-new-relationship').click(function(){
+                // Update table data
+                $('#new_relationship_modal .relationship_table').trigger('change');
+
                 $('#new_relationship_modal').modal('show');
             });
 
             relationshipTextDataBinding();
 
             $('.relationship_table').on('change', function(){
-                var tbl_selected = $(this).val();
-                var rowDropDowns = $(this).parent().parent().find('.rowDrop');
-                $(this).parent().parent().find('.rowDrop').each(function(){
-                    console.log('1');
-                    $(this).data('table', tbl_selected);
-                    populateRowsFromTable($(this));
-                });
+                populateRowsFromTable($(this));
             });
 
             $('.voyager-relationship-details-btn').click(function(){
                 $(this).toggleClass('open');
                 if($(this).hasClass('open')){
                     $(this).parent().parent().find('.voyager-relationship-details').slideDown();
+                    populateRowsFromTable($(this).parent().parent().find('select.relationship_table'));
                 } else {
                     $(this).parent().parent().find('.voyager-relationship-details').slideUp();
                 }
@@ -604,23 +616,29 @@
         });
 
         function populateRowsFromTable(dropdown){
-            var tbl = dropdown.data('table');
-            var selected_value = dropdown.data('selected');
-            if(tbl.length != 0){
-                $.get('{{ route('voyager.database.index') }}/' + tbl, function(data){
-                    $(dropdown).empty();
-                    for (var option in data) {
-                       $('<option/>', {
-                        value: option,
-                        html: option
-                        }).appendTo($(dropdown));
+            var tbl = dropdown.val();
+
+            $.get('{{ route('voyager.database.index') }}/' + tbl, function(data){
+                var tbl_selected = $(dropdown).val();
+
+                $(dropdown).parent().parent().find('.rowDrop').each(function(){
+                    var selected_value = $(this).data('selected');
+
+                    var options = $.map(data, function (obj, key) {
+                        return {id: key, text: key};
+                    });
+
+                    $(this).empty().select2({
+                        data: options
+                    });
+
+                    if (selected_value == '' || !$(this).find("option[value='"+selected_value+"']").length) {
+                        selected_value = $(this).find("option:first-child").val();
                     }
 
-                    if($(dropdown).find('option[value="'+selected_value+'"]').length > 0){
-                        $(dropdown).val(selected_value);
-                    }
+                    $(this).val(selected_value).trigger('change');
                 });
-            }
+            });
         }
 
         function relationshipTextDataBinding(){
@@ -636,7 +654,6 @@
                 $(this).parent().parent().find('.label_table_name').text(tbl_selected_text);
             });
         }
-
 
         /********** End Relationship Functionality **********/
     </script>

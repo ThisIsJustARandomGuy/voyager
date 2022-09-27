@@ -51,11 +51,6 @@ class VoyagerBaseController extends Controller
         $sortOrder = $request->get('sort_order', $dataType->order_direction);
         $usesSoftDeletes = false;
         $showSoftDeleted = false;
-        $orderColumn = [];
-        if ($orderBy) {
-            $index = $dataType->browseRows->where('field', $orderBy)->keys()->first() + 1;
-            $orderColumn = [[$index, $sortOrder ?? 'desc']];
-        }
 
         // Next Get or Paginate the actual content from the MODEL that corresponds to the slug DataType
         if (strlen($dataType->model_name) != 0) {
@@ -83,11 +78,34 @@ class VoyagerBaseController extends Controller
             if ($search->value != '' && $search->key && $search->filter) {
                 $search_filter = ($search->filter == 'equals') ? '=' : 'LIKE';
                 $search_value = ($search->filter == 'equals') ? $search->value : '%'.$search->value.'%';
-                $query->where($search->key, $search_filter, $search_value);
+
+                $searchField = $dataType->name.'.'.$search->key;
+                if ($row = $this->findSearchableRelationshipRow($dataType->rows->where('type', 'relationship'), $search->key)) {
+                    $query->whereIn(
+                        $searchField,
+                        $row->details->model::where($row->details->label, $search_filter, $search_value)->pluck('id')->toArray()
+                    );
+                } else {
+                    if ($dataType->browseRows->pluck('field')->contains($search->key)) {
+                        $query->where($searchField, $search_filter, $search_value);
+                    }
+                }
             }
 
-            if ($orderBy && in_array($orderBy, $dataType->fields())) {
+            $row = $dataType->rows->where('field', $orderBy)->firstWhere('type', 'relationship');
+            if ($orderBy && (in_array($orderBy, $dataType->fields()) || !empty($row))) {
                 $querySortOrder = (!empty($sortOrder)) ? $sortOrder : 'desc';
+                if (!empty($row)) {
+                    $query->select([
+                        $dataType->name.'.*',
+                        'joined.'.$row->details->label.' as '.$orderBy,
+                    ])->leftJoin(
+                        $row->details->table.' as joined',
+                        $dataType->name.'.'.$row->details->column,
+                        'joined.'.$row->details->key
+                    );
+                }
+
                 $dataTypeContent = call_user_func([
                     $query->orderBy($orderBy, $querySortOrder),
                     $getter,
@@ -129,6 +147,29 @@ class VoyagerBaseController extends Controller
                 }
             }
         }
+
+        // Define showCheckboxColumn
+        $showCheckboxColumn = false;
+        if (Auth::user()->can('delete', app($dataType->model_name))) {
+            $showCheckboxColumn = true;
+        } else {
+            foreach ($actions as $action) {
+                if (method_exists($action, 'massAction')) {
+                    $showCheckboxColumn = true;
+                }
+            }
+        }
+
+        // Define orderColumn
+        $orderColumn = [];
+        if ($orderBy) {
+            $index = $dataType->browseRows->where('field', $orderBy)->keys()->first() + ($showCheckboxColumn ? 1 : 0);
+            $orderColumn = [[$index, $sortOrder ?? 'desc']];
+        }
+
+        // Define list of columns that can be sorted server side
+        $sortableColumns = $this->getSortableColumns($dataType->browseRows);
+
         $view = 'voyager::bread.browse';
 
         if (view()->exists("voyager::$slug.browse")) {
@@ -143,12 +184,14 @@ class VoyagerBaseController extends Controller
             'search',
             'orderBy',
             'orderColumn',
+            'sortableColumns',
             'sortOrder',
             'searchable',
             'isServerSide',
             'defaultSearchKey',
             'usesSoftDeletes',
-            'showSoftDeleted'
+            'showSoftDeleted',
+            'showCheckboxColumn'
         ));
     }
 
@@ -920,5 +963,40 @@ class VoyagerBaseController extends Controller
 
         // No result found, return empty array
         return response()->json([], 404);
+    }
+
+    protected function findSearchableRelationshipRow($relationshipRows, $searchKey)
+    {
+        return $relationshipRows->filter(function ($item) use ($searchKey) {
+            if ($item->details->column != $searchKey) {
+                return false;
+            }
+            if ($item->details->type != 'belongsTo') {
+                return false;
+            }
+
+            return !$this->relationIsUsingAccessorAsLabel($item->details);
+        })->first();
+    }
+
+    protected function getSortableColumns($rows)
+    {
+        return $rows->filter(function ($item) {
+            if ($item->type != 'relationship') {
+                return true;
+            }
+            if ($item->details->type != 'belongsTo') {
+                return false;
+            }
+
+            return !$this->relationIsUsingAccessorAsLabel($item->details);
+        })
+        ->pluck('field')
+        ->toArray();
+    }
+
+    protected function relationIsUsingAccessorAsLabel($details)
+    {
+        return in_array($details->label, app($details->model)->additional_attributes ?? []);
     }
 }

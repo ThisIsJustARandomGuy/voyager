@@ -111,7 +111,6 @@
                             <li>{{ $query_res->{$options->label} }}</li>
                         @endforeach
                     </ul>
-
                 @else
                     <p>{{ __('voyager::generic.no_results') }}</p>
                 @endif
@@ -125,7 +124,7 @@
                 @php
                     $relationshipData = (isset($data)) ? $data : $dataTypeContent;
 
-                    $selected_values = isset($relationshipData) ? $relationshipData->belongsToMany($options->model, $options->pivot_table)->get()->map(function ($item, $key) use ($options) {
+                    $selected_values = isset($relationshipData) ? $relationshipData->belongsToMany($options->model, $options->pivot_table, $options->foreign_pivot_key ?? null, $options->related_pivot_key ?? null, $options->parent_key ?? null, $options->key)->get()->map(function ($item, $key) use ($options) {
             			return $item->{$options->label};
             		})->all() : array();
                 @endphp
