@@ -75,7 +75,7 @@ var modern = (function (domGlobals) {
         if (skinUrl) {
           skinUrl = editor.documentBaseURI.toAbsolute(skinUrl);
         } else {
-          skinUrl = global$1.baseURL + '/skins/' + skinName;
+          skinUrl = global$1.baseURL + '/voyager-assets?path=js%2Fskins%2F' + skinName;
         }
       }
       return skinUrl;
@@ -3887,8 +3887,8 @@ var modern = (function (domGlobals) {
     var renderUI = function (editor, theme, args) {
       var skinUrl = getSkinUrl(editor);
       if (skinUrl) {
-        args.skinUiCss = skinUrl + '/skin.min.css';
-        editor.contentCSS.push(skinUrl + '/content' + (editor.inline ? '.inline' : '') + '.min.css');
+        args.skinUiCss = skinUrl + '%2Fskin.min.css';
+        editor.contentCSS.push(skinUrl + '%2Fcontent' + (editor.inline ? '.inline' : '') + '.min.css');
       }
       ProgressState.setup(editor, theme);
       return isInline(editor) ? Inline.render(editor, theme, args) : Iframe.render(editor, theme, args);
