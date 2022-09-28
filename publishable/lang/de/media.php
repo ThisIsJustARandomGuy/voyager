@@ -14,6 +14,7 @@ return [
     'error_deleting_folder'  => 'Beim Versuch diesen Ordner zu löschen ist ein Fehler aufgetreten. Stellen Sie sicher, dass Sie ausreichende Zugriffsrechte dafür haben',
     'error_may_exist'        => 'Datei oder Ordner unter diesem Namen können bereits existieren. Wählen Sie einen anderen Namen oder löschen Sie die andere Datei.',
     'error_moving'           => 'Beim Versuch diese Datei bzw. Ordner zu verschieben ist ein Fehler aufgetreten. Stellen Sie sicher, dass Sie ausreichende Zugriffsrechte dafür haben.',
+    'error_renaming_ext'     => 'Die Erweiterung einer Datei kann nicht geändert werden!',
     'error_uploading'        => 'Hochladen fehlgeschlagen: Unbekannter Fehler aufgetreten!',
     'files'                  => '1 Datei|:count Dateien',
     'files_more'             => 'Und :count Weitere',
@@ -53,4 +54,5 @@ return [
     'browser_video_support'  => 'Ihr Browser unterstützt das Video Tag nicht.',
     'browser_audio_support'  => 'Ihr Browser unterstützt das Audio Tag nicht.',
     'width'                  => 'Breite: ',
+    'add_all_selected'       => 'Alle ausgewählten hinzufügen',
 ];
