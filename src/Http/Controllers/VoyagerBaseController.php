@@ -742,12 +742,12 @@ class VoyagerBaseController extends Controller
      *
      * @return void
      */
-    public function deleteBreadImages(Request $request, $data, $rows, $single_image = null)
+    public function deleteBreadImages($data, $rows, $single_image = null)
     {
         $imagesDeleted = false;
 
         foreach ($rows as $row) {
-            if ($row->type == 'multiple_images' || $request->all('multi')) {
+            if ($row->type == 'multiple_images') {
                 $images_to_remove = json_decode($data->getOriginal($row->field), true) ?? [];
                 // Sometimes it's double encoded due to a bug in Voyager
                 if(is_string($images_to_remove)) {
