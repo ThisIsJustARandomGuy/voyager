@@ -176,28 +176,29 @@ class Translator implements ArrayAccess, JsonSerializable
         $this->attributes[$name]['modified'] = true;
     }
 
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return $this->attributes[$offset]['value'];
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->attributes[$offset]['value'] = $value;
 
         if (!in_array($offset, $this->model->getTranslatableAttributes())) {
-            return $this->model->$offset = $value;
+            $this->model->$offset = $value;
+            return;
         }
 
         $this->attributes[$offset]['modified'] = true;
     }
 
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->attributes[$offset]);
     }
 
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         unset($this->attributes[$offset]);
     }
