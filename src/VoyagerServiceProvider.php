@@ -15,8 +15,6 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageServiceProvider;
-use Larapack\DoctrineSupport\DoctrineSupportServiceProvider;
-use Larapack\VoyagerHooks\VoyagerHooksServiceProvider;
 use TCG\Voyager\Events\FormFieldsRegistered;
 use TCG\Voyager\Facades\Voyager as VoyagerFacade;
 use TCG\Voyager\FormFields\After\DescriptionHandler;
@@ -59,8 +57,6 @@ class VoyagerServiceProvider extends ServiceProvider
         $this->app->register(VoyagerEventServiceProvider::class);
         $this->app->register(ImageServiceProvider::class);
         $this->app->register(VoyagerDummyServiceProvider::class);
-        $this->app->register(VoyagerHooksServiceProvider::class);
-        $this->app->register(DoctrineSupportServiceProvider::class);
 
         $loader = AliasLoader::getInstance();
         $loader->alias('Voyager', VoyagerFacade::class);
@@ -291,8 +287,6 @@ class VoyagerServiceProvider extends ServiceProvider
 
                     $this->policies[$dataType->model_name] = $policyClass;
                 }
-
-                $this->registerPolicies();
             }
         } catch (\PDOException $e) {
             Log::error('No Database connection yet in VoyagerServiceProvider loadAuth()');
