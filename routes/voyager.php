@@ -120,9 +120,6 @@ Route::group(['as' => 'voyager.'], function () {
             Route::get('delete_relationship/{id}', ['uses' => $namespacePrefix.'VoyagerBreadController@deleteRelationship',  'as' => 'delete_relationship']);
         });
 
-        // Database Routes
-        Route::resource('database', $namespacePrefix.'VoyagerDatabaseController');
-
         // Compass Routes
         Route::group([
             'as'     => 'compass.',

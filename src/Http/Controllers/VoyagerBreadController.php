@@ -5,6 +5,7 @@ namespace TCG\Voyager\Http\Controllers;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use ReflectionClass;
 use TCG\Voyager\Database\Schema\Column;
@@ -35,7 +36,7 @@ class VoyagerBreadController extends Controller
             ];
 
             return (object) $table;
-        }, SchemaManager::listTableNames());
+        }, Schema::getTableListing());
 
         return Voyager::view('voyager::tools.bread.index')->with(compact('dataTypes', 'tables'));
     }
@@ -131,7 +132,7 @@ class VoyagerBreadController extends Controller
         );
 
         $isModelTranslatable = is_bread_translatable($dataType);
-        $tables = SchemaManager::listTableNames();
+        $tables = Schema::getTableListing();
         $dataTypeRelationships = Voyager::model('DataRow')->where('data_type_id', '=', $dataType->id)->where('type', '=', 'relationship')->get();
         $scopes = [];
         if ($dataType->model_name != '') {

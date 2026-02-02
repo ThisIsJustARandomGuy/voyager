@@ -15,9 +15,8 @@
         }
     ],
     "require": {
-        "illuminate/support": "~10.0",
+        "illuminate/support": "~11.0",
         "intervention/image": "^2.4",
-        "doctrine/dbal": "^3.2",
         "laravel/ui": "^4.0",
         "arrilot/laravel-widgets": "^3.7",
         "league/flysystem": "^3.0",

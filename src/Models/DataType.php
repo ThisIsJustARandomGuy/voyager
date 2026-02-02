@@ -5,6 +5,7 @@ namespace TCG\Voyager\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use TCG\Voyager\Database\Schema\SchemaManager;
 use TCG\Voyager\Facades\Voyager;
 use TCG\Voyager\Traits\Translatable;
@@ -152,7 +153,7 @@ class DataType extends Model
             $name = $this->name;
         }
 
-        $fields = SchemaManager::listTableColumnNames($name);
+        $fields = Schema::getColumnListing($name);
 
         if ($extraFields = $this->extraFields()) {
             foreach ($extraFields as $field) {
