@@ -90,7 +90,7 @@ class MenuItem extends Model
 
     public function getParametersAttribute()
     {
-        return json_decode($this->attributes['parameters']);
+        return !empty($this->attributes['parameters']) ? json_decode($this->attributes['parameters']) : null;
     }
 
     public function setParametersAttribute($value)

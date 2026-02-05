@@ -36,7 +36,7 @@ class VoyagerBreadController extends Controller
             ];
 
             return (object) $table;
-        }, Schema::getTableListing());
+        }, Schema::getTableListing(schemaQualified: false));
 
         return Voyager::view('voyager::tools.bread.index')->with(compact('dataTypes', 'tables'));
     }
@@ -132,7 +132,7 @@ class VoyagerBreadController extends Controller
         );
 
         $isModelTranslatable = is_bread_translatable($dataType);
-        $tables = Schema::getTableListing();
+        $tables = Schema::getTableListing(schemaQualified: false);
         $dataTypeRelationships = Voyager::model('DataRow')->where('data_type_id', '=', $dataType->id)->where('type', '=', 'relationship')->get();
         $scopes = [];
         if ($dataType->model_name != '') {
