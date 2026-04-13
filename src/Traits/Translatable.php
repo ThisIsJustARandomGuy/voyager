@@ -127,7 +127,7 @@ trait Translatable
      * @param null $language
      * @param bool $fallback
      *
-     * @return null
+     * @return mixed
      */
     public function getTranslatedAttribute($attribute, $language = null, $fallback = true)
     {
